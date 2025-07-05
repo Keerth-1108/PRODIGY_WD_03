@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f0f0;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    #game {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 5px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: white;
+      font-size: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 2px solid #444;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+    #mode {
+      margin-top: 20px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Tic Tac Toe</h1>
+<div id="mode">
+  <label>
+    <input type="radio" name="mode" value="human" checked> 2 Players
+  </label>
+  <label>
+    <input type="radio" name="mode" value="ai"> Vs AI
+  </label>
+</div>
+<div id="game"></div>
+<div id="status"></div>
+<button onclick="resetGame()">Restart</button>
+
+<script>
+  const gameEl = document.getElementById('game');
+  const statusEl = document.getElementById('status');
+  const modeRadios = document.querySelectorAll('input[name="mode"]');
+  let board = Array(9).fill('');
+  let currentPlayer = 'X';
+  let isGameOver = false;
+  let vsAI = false;
+
+  function createBoard() {
+    gameEl.innerHTML = '';
+    board.forEach((_, i) => {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.dataset.index = i;
+      cell.addEventListener('click', handleClick);
+      gameEl.appendChild(cell);
+    });
+  }
+
+  function handleClick(e) {
+    const index = e.target.dataset.index;
+    if (board[index] || isGameOver) return;
+
+    board[index] = currentPlayer;
+    e.target.textContent = currentPlayer;
+
+    if (checkWin(currentPlayer)) {
+      statusEl.textContent = `${currentPlayer} wins!`;
+      isGameOver = true;
+      return;
+    }
+
+    if (board.every(cell => cell)) {
+      statusEl.textContent = "It's a draw!";
+      isGameOver = true;
+      return;
+    }
+
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    statusEl.textContent = `Turn: ${currentPlayer}`;
+
+    if (vsAI && currentPlayer === 'O') {
+      setTimeout(aiMove, 500);
+    }
+  }
+
+  function checkWin(player) {
+    const winCombos = [
+      [0,1,2], [3,4,5], [6,7,8],
+      [0,3,6], [1,4,7], [2,5,8],
+      [0,4,8], [2,4,6]
+    ];
+    return winCombos.some(combo =>
+      combo.every(i => board[i] === player)
+    );
+  }
+
+  function aiMove() {
+    // Simple AI: pick random empty cell
+    const emptyIndices = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+    if (emptyIndices.length === 0) return;
+    const move = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+    board[move] = 'O';
+    document.querySelector(`[data-index="${move}"]`).textContent = 'O';
+
+    if (checkWin('O')) {
+      statusEl.textContent = `O wins!`;
+      isGameOver = true;
+      return;
+    }
+
+    if (board.every(cell => cell)) {
+      statusEl.textContent = "It's a draw!";
+      isGameOver = true;
+      return;
+    }
+
+    currentPlayer = 'X';
+    statusEl.textContent = `Turn: ${currentPlayer}`;
+  }
+
+  function resetGame() {
+    board = Array(9).fill('');
+    currentPlayer = 'X';
+    isGameOver = false;
+    statusEl.textContent = `Turn: ${currentPlayer}`;
+    createBoard();
+  }
+
+  modeRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      vsAI = document.querySelector('input[name="mode"]:checked').value === 'ai';
+      resetGame();
+    });
+  });
+
+  resetGame();
+</script>
+
+</body>
+</html>
